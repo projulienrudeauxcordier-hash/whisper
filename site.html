@@ -1,0 +1,1122 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WHISPER — Ne faites pas de bruit.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Creepster&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#05050a;
+    --red:#ff2a6a;
+    --cyan:#05d9e8;
+    --panel:#0a0a14;
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0;padding:0;
+    background:var(--bg);
+    color:#e8e8f0;
+    font-family:'Courier New', Courier, monospace;
+    overflow-x:hidden;
+    scroll-behavior:smooth;
+    cursor:none;
+  }
+
+  /* ===== custom creepy cursor ===== */
+  .cursor-dot{
+    position:fixed;
+    top:0;left:0;
+    width:10px;height:10px;
+    border-radius:50%;
+    background:var(--red);
+    box-shadow:0 0 10px var(--red), 0 0 20px rgba(255,42,106,0.6);
+    pointer-events:none;
+    z-index:100000;
+    transform:translate(-50%,-50%);
+    transition:width .15s, height .15s, background .2s;
+  }
+  .cursor-ring{
+    position:fixed;
+    top:0;left:0;
+    width:30px;height:30px;
+    border:1px solid rgba(255,42,106,0.5);
+    border-radius:50%;
+    pointer-events:none;
+    z-index:99999;
+    transform:translate(-50%,-50%);
+    transition:transform .08s linear, border-color .3s;
+  }
+  @media (hover:none), (pointer:coarse){
+    html,body{cursor:auto;}
+    .cursor-dot,.cursor-ring{display:none;}
+  }
+
+  /* ===== CRT / old TV overlay ===== */
+  .crt-overlay{
+    pointer-events:none;
+    position:fixed;
+    inset:0;
+    z-index:9999;
+    background:
+      repeating-linear-gradient(
+        to bottom,
+        rgba(255,255,255,0.035) 0px,
+        rgba(255,255,255,0.035) 1px,
+        transparent 2px,
+        transparent 3px
+      );
+    mix-blend-mode:overlay;
+  }
+  .crt-vignette{
+    pointer-events:none;
+    position:fixed;
+    inset:0;
+    z-index:9998;
+    box-shadow: inset 0 0 180px 60px rgba(0,0,0,0.85);
+  }
+  .crt-flicker{
+    pointer-events:none;
+    position:fixed;
+    inset:0;
+    z-index:9997;
+    background:rgba(255,255,255,0.02);
+    animation:flicker 6s infinite;
+  }
+  @keyframes flicker{
+    0%,19%,21%,23%,25%,54%,56%,100%{opacity:1;}
+    20%,24%,55%{opacity:0.4;}
+  }
+  .grain{
+    pointer-events:none;
+    position:fixed;
+    inset:-50%;
+    width:200%;
+    height:200%;
+    z-index:9996;
+    opacity:0.05;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    animation:grainMove 0.4s steps(3) infinite;
+  }
+  @keyframes grainMove{
+    0%{transform:translate(0,0);}
+    33%{transform:translate(-2%,2%);}
+    66%{transform:translate(2%,-1%);}
+    100%{transform:translate(0,0);}
+  }
+
+  /* ===== static burst (brief VHS glitch) ===== */
+  .static-burst{
+    pointer-events:none;
+    position:fixed;
+    inset:0;
+    z-index:99998;
+    opacity:0;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='s'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23s)'/%3E%3C/svg%3E");
+    mix-blend-mode:screen;
+  }
+  .static-burst.active{
+    animation:staticPulse 0.35s steps(4);
+  }
+  @keyframes staticPulse{
+    0%{opacity:0;}
+    15%{opacity:0.85;transform:translate(2px,0);}
+    30%{opacity:0.2;transform:translate(-3px,1px);}
+    45%{opacity:0.9;transform:translate(1px,-2px);}
+    60%{opacity:0.1;}
+    75%{opacity:0.7;transform:translate(-1px,2px);}
+    100%{opacity:0;transform:translate(0,0);}
+  }
+  .screen-shake{
+    animation:screenShake 0.4s;
+  }
+  @keyframes screenShake{
+    0%,100%{transform:translate(0,0);}
+    20%{transform:translate(-6px,3px);}
+    40%{transform:translate(5px,-4px);}
+    60%{transform:translate(-4px,-2px);}
+    80%{transform:translate(3px,4px);}
+  }
+
+  /* ===== drifting eyes in the dark ===== */
+  .eyes-layer{
+    pointer-events:none;
+    position:fixed;
+    inset:0;
+    z-index:1;
+    overflow:hidden;
+  }
+  .eye-pair{
+    position:absolute;
+    display:flex;
+    gap:14px;
+    opacity:0;
+    filter:blur(0.3px);
+  }
+  .eye-pair span{
+    width:7px;height:4px;
+    background:var(--red);
+    border-radius:50%;
+    box-shadow:0 0 8px var(--red), 0 0 16px rgba(255,42,106,0.6);
+  }
+  .eye-pair.show{
+    animation:eyeAppear 4.5s ease-in-out forwards;
+  }
+  @keyframes eyeAppear{
+    0%{opacity:0;}
+    15%{opacity:1;}
+    85%{opacity:1;}
+    100%{opacity:0;}
+  }
+
+  /* ===== whisper text drifting ===== */
+  .whisper-text{
+    position:fixed;
+    z-index:2;
+    color:rgba(255,42,106,0.18);
+    font-family:'Creepster', cursive;
+    letter-spacing:3px;
+    pointer-events:none;
+    white-space:nowrap;
+    opacity:0;
+    text-shadow:0 0 12px rgba(255,42,106,0.3);
+  }
+  .whisper-text.show{
+    animation:whisperFade 5s ease-in-out forwards;
+  }
+  @keyframes whisperFade{
+    0%{opacity:0;transform:translateY(10px);}
+    20%{opacity:1;transform:translateY(0);}
+    80%{opacity:1;}
+    100%{opacity:0;transform:translateY(-10px);}
+  }
+
+  /* ===== blood drip top ===== */
+  .blood-drip{
+    position:fixed;
+    top:0;left:0;right:0;
+    z-index:9995;
+    pointer-events:none;
+    height:40px;
+    overflow:visible;
+  }
+
+  /* ===== nav / sound button ===== */
+  .sound-btn{
+    position:fixed;
+    top:18px;right:18px;
+    z-index:10000;
+    background:rgba(5,5,10,0.8);
+    border:1px solid var(--cyan);
+    color:var(--cyan);
+    padding:10px 16px;
+    font-family:'Courier New', monospace;
+    letter-spacing:1px;
+    cursor:pointer;
+    border-radius:4px;
+    text-transform:uppercase;
+    font-size:12px;
+    transition:all .2s;
+    box-shadow:0 0 8px rgba(5,217,232,0.3);
+  }
+  .sound-btn:hover{
+    background:var(--cyan);
+    color:#05050a;
+    box-shadow:0 0 16px var(--cyan);
+  }
+
+  .presence{
+    position:fixed;
+    top:18px;left:18px;
+    z-index:10000;
+    color:var(--red);
+    font-size:11px;
+    letter-spacing:2px;
+    opacity:0;
+    text-shadow:0 0 8px var(--red);
+    pointer-events:none;
+  }
+  .presence.show{
+    animation:presenceFlash 3s ease-in-out forwards;
+  }
+  @keyframes presenceFlash{
+    0%{opacity:0;}
+    10%{opacity:1;}
+    85%{opacity:1;}
+    100%{opacity:0;}
+  }
+
+  section{
+    position:relative;
+    width:100%;
+    padding:80px 20px;
+    max-width:1100px;
+    margin:0 auto;
+    z-index:3;
+  }
+
+  /* ===== HERO ===== */
+  .hero{
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    position:relative;
+    padding:20px;
+  }
+  .hero::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:
+      radial-gradient(circle at 50% 30%, rgba(255,42,106,0.12), transparent 60%),
+      radial-gradient(circle at 50% 70%, rgba(5,217,232,0.08), transparent 60%);
+    z-index:0;
+  }
+  .hero-content{position:relative;z-index:1;}
+  h1.title{
+    font-family:'Creepster', cursive;
+    font-size:clamp(3.5rem, 12vw, 9rem);
+    color:var(--red);
+    margin:0;
+    letter-spacing:6px;
+    text-shadow:
+      0 0 10px var(--red),
+      0 0 30px var(--red),
+      0 0 60px rgba(255,42,106,0.5);
+    animation:titleFlicker 3.2s infinite;
+    position:relative;
+  }
+  h1.title::before,
+  h1.title::after{
+    content:"WHISPER";
+    position:absolute;
+    inset:0;
+    opacity:0;
+  }
+  h1.title.glitch::before{
+    opacity:0.7;
+    color:var(--cyan);
+    animation:glitchSlice1 0.25s steps(2) 1;
+    clip-path:polygon(0 10%,100% 10%,100% 30%,0 30%);
+  }
+  h1.title.glitch::after{
+    opacity:0.7;
+    color:var(--red);
+    animation:glitchSlice2 0.25s steps(2) 1;
+    clip-path:polygon(0 60%,100% 60%,100% 80%,0 80%);
+  }
+  @keyframes glitchSlice1{
+    0%{transform:translate(0);}
+    50%{transform:translate(-8px,0);}
+    100%{transform:translate(0);}
+  }
+  @keyframes glitchSlice2{
+    0%{transform:translate(0);}
+    50%{transform:translate(8px,0);}
+    100%{transform:translate(0);}
+  }
+  @keyframes titleFlicker{
+    0%,100%{opacity:1;text-shadow:0 0 10px var(--red),0 0 30px var(--red),0 0 60px rgba(255,42,106,0.5);}
+    3%{opacity:0.4;}
+    6%{opacity:1;}
+    7%{opacity:0.2;}
+    8%{opacity:1;}
+    50%{opacity:1;}
+    52%{opacity:0.6;text-shadow:0 0 2px var(--cyan),0 0 8px var(--cyan);}
+    53%{opacity:1;}
+    78%{opacity:0.5;}
+    79%{opacity:1;}
+  }
+  .title.glitch{
+    animation:titleFlicker 3.2s infinite, glitchPos 0.25s steps(2) 1;
+  }
+  @keyframes glitchPos{
+    0%{transform:translate(0);}
+    20%{transform:translate(-4px,2px);}
+    40%{transform:translate(4px,-2px);}
+    60%{transform:translate(-3px,-1px) skewX(2deg);}
+    80%{transform:translate(2px,1px);}
+    100%{transform:translate(0);}
+  }
+  .subtitle{
+    font-size:clamp(1rem,3vw,1.4rem);
+    color:var(--cyan);
+    letter-spacing:3px;
+    margin-top:10px;
+    text-transform:uppercase;
+    text-shadow:0 0 8px rgba(5,217,232,0.6);
+  }
+  .subtitle.danger{
+    color:var(--red) !important;
+    text-shadow:0 0 12px var(--red) !important;
+  }
+  .cta-btn{
+    margin-top:50px;
+    display:inline-block;
+    background:transparent;
+    color:var(--red);
+    border:2px solid var(--red);
+    padding:16px 46px;
+    font-family:'Courier New', monospace;
+    font-weight:bold;
+    font-size:1.1rem;
+    letter-spacing:3px;
+    cursor:none;
+    text-decoration:none;
+    position:relative;
+    transition:all .25s;
+    text-transform:uppercase;
+  }
+  .cta-btn:hover{
+    background:var(--red);
+    color:#05050a;
+    box-shadow:0 0 25px var(--red);
+  }
+  .scroll-hint{
+    position:absolute;
+    bottom:30px;
+    left:50%;
+    transform:translateX(-50%);
+    color:#666;
+    font-size:0.8rem;
+    letter-spacing:2px;
+    animation:bob 2s infinite;
+  }
+  @keyframes bob{
+    0%,100%{transform:translate(-50%,0);}
+    50%{transform:translate(-50%,8px);}
+  }
+
+  /* ===== section headers ===== */
+  h2.section-title{
+    font-family:'Creepster', cursive;
+    color:var(--cyan);
+    font-size:clamp(2rem,5vw,3rem);
+    text-align:center;
+    margin-bottom:50px;
+    letter-spacing:3px;
+    text-shadow:0 0 15px rgba(5,217,232,0.5);
+  }
+
+  /* ===== DOWNLOADS ===== */
+  .downloads-grid{
+    display:flex;
+    gap:30px;
+    justify-content:center;
+    flex-wrap:wrap;
+  }
+  .download-card{
+    background:var(--panel);
+    border:1px solid #2a2a3a;
+    border-radius:8px;
+    padding:36px 40px;
+    text-align:center;
+    width:260px;
+    transition:all .25s;
+    text-decoration:none;
+    color:inherit;
+    display:block;
+    cursor:none;
+    position:relative;
+    overflow:hidden;
+  }
+  .download-card:hover{
+    border-color:var(--red);
+    transform:translateY(-6px);
+    box-shadow:0 10px 30px rgba(255,42,106,0.2);
+  }
+  .download-card:hover::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:repeating-linear-gradient(to bottom, rgba(255,42,106,0.06) 0px, transparent 2px, transparent 4px);
+    animation:grainMove 0.3s steps(3) infinite;
+  }
+  .download-icon{
+    font-size:3rem;
+    margin-bottom:14px;
+    display:block;
+  }
+  .download-card h3{
+    color:#fff;
+    margin:10px 0;
+    letter-spacing:2px;
+  }
+  .download-card p{
+    color:#888;
+    font-size:0.85rem;
+    margin:0;
+  }
+  .download-badge{
+    display:inline-block;
+    margin-top:14px;
+    padding:8px 20px;
+    border:1px solid var(--cyan);
+    color:var(--cyan);
+    font-size:0.75rem;
+    letter-spacing:2px;
+    border-radius:4px;
+  }
+  .download-warning{
+    text-align:center;
+    color:#665;
+    font-size:0.75rem;
+    letter-spacing:1px;
+    margin-top:18px;
+    max-width:460px;
+    margin-left:auto;
+    margin-right:auto;
+    line-height:1.6;
+  }
+  .version-note{
+    text-align:center;
+    color:#666;
+    margin-top:30px;
+    letter-spacing:2px;
+    font-size:0.85rem;
+  }
+
+  /* ===== MULTIPLAYER ===== */
+  .mp-box{
+    background:var(--panel);
+    border:1px solid var(--cyan);
+    border-radius:10px;
+    padding:40px;
+    text-align:center;
+    box-shadow:0 0 30px rgba(5,217,232,0.08);
+  }
+  .mp-box p{
+    color:#ccc;
+    line-height:1.7;
+    max-width:600px;
+    margin:0 auto 30px;
+  }
+  .ip-display{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:16px;
+    flex-wrap:wrap;
+  }
+  .ip-value{
+    font-size:clamp(1.6rem,5vw,2.4rem);
+    letter-spacing:4px;
+    color:var(--red);
+    background:#000;
+    padding:16px 30px;
+    border:1px dashed var(--red);
+    border-radius:6px;
+    text-shadow:0 0 10px rgba(255,42,106,0.6);
+  }
+  .copy-btn{
+    background:var(--cyan);
+    color:#05050a;
+    border:none;
+    padding:17px 24px;
+    font-weight:bold;
+    letter-spacing:1px;
+    cursor:none;
+    border-radius:6px;
+    font-family:'Courier New', monospace;
+    transition:all .2s;
+  }
+  .copy-btn:hover{
+    background:#fff;
+    box-shadow:0 0 15px var(--cyan);
+  }
+  .mp-cmd{
+    margin-top:26px;
+    color:#888;
+    font-size:0.85rem;
+  }
+  .mp-cmd code{
+    background:#000;
+    color:var(--cyan);
+    padding:4px 10px;
+    border-radius:4px;
+    border:1px solid #222;
+  }
+
+  /* ===== FEATURES ===== */
+  .features-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+    gap:24px;
+  }
+  .feature-card{
+    background:var(--panel);
+    border:1px solid #222;
+    border-radius:8px;
+    padding:30px 24px;
+    text-align:center;
+    transition:all .25s;
+  }
+  .feature-card:hover{
+    border-color:var(--red);
+    transform:translateY(-4px);
+  }
+  .feature-icon{
+    font-size:2.4rem;
+    margin-bottom:14px;
+    display:block;
+  }
+  .feature-card h3{
+    color:#fff;
+    font-size:1rem;
+    letter-spacing:1.5px;
+    margin:0 0 10px;
+  }
+  .feature-card p{
+    color:#888;
+    font-size:0.85rem;
+    line-height:1.5;
+    margin:0;
+  }
+
+  /* ===== CREDITS ===== */
+  .credits{
+    text-align:center;
+    color:#555;
+    padding:60px 20px 100px;
+    letter-spacing:2px;
+    font-size:0.85rem;
+    position:relative;
+  }
+  .credits .small-title{
+    color:var(--red);
+    font-family:'Creepster', cursive;
+    font-size:1.5rem;
+    letter-spacing:3px;
+    margin-bottom:10px;
+    opacity:0.6;
+  }
+  .credits .signature{
+    margin-top:18px;
+    font-size:0.7rem;
+    color:#333;
+    letter-spacing:1px;
+  }
+
+  /* ===== Easter egg dot ===== */
+  .egg-dot{
+    position:fixed;
+    bottom:14px;
+    right:14px;
+    width:8px;
+    height:8px;
+    border-radius:50%;
+    background:rgba(255,42,106,0.15);
+    cursor:none;
+    z-index:10001;
+    transition:background .3s;
+  }
+  .egg-dot:hover{
+    background:rgba(255,42,106,0.3);
+  }
+
+  /* ===== Screamer overlay ===== */
+  .screamer{
+    position:fixed;
+    inset:0;
+    z-index:999999;
+    background:#000;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    flex-direction:column;
+  }
+  .screamer.active{
+    display:flex;
+    animation:screamerFlash 0.08s steps(1) infinite;
+  }
+  @keyframes screamerFlash{
+    0%{background:#000;}
+    50%{background:#1a0000;}
+    100%{background:#000;}
+  }
+  .screamer-face{
+    width:min(70vw,420px);
+    height:min(70vw,420px);
+    animation:screamerZoom 2s ease-out forwards;
+  }
+  @keyframes screamerZoom{
+    0%{transform:scale(0.6);}
+    15%{transform:scale(1.15);}
+    100%{transform:scale(1);}
+  }
+  .screamer-text{
+    font-family:'Creepster', cursive;
+    font-size:clamp(2rem,8vw,4.5rem);
+    color:var(--red);
+    margin-top:20px;
+    letter-spacing:4px;
+    text-shadow:0 0 30px var(--red);
+    animation:shake 0.1s infinite;
+  }
+  @keyframes shake{
+    0%{transform:translate(0,0);}
+    25%{transform:translate(-5px,3px);}
+    50%{transform:translate(5px,-3px);}
+    75%{transform:translate(-3px,-3px);}
+    100%{transform:translate(0,0);}
+  }
+
+  @media (max-width:600px){
+    section{padding:60px 16px;}
+    .ip-display{flex-direction:column;}
+    .mp-box{padding:26px 18px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="cursor-ring" id="cursorRing"></div>
+<div class="cursor-dot" id="cursorDot"></div>
+
+<div class="crt-overlay"></div>
+<div class="crt-vignette"></div>
+<div class="crt-flicker"></div>
+<div class="grain"></div>
+<div class="static-burst" id="staticBurst"></div>
+<div class="eyes-layer" id="eyesLayer"></div>
+
+<button class="sound-btn" id="soundBtn">🔇 Activer le son</button>
+<div class="presence" id="presence">QUELQU'UN D'AUTRE EST ICI</div>
+
+<!-- ===== HERO ===== -->
+<section class="hero">
+  <div class="hero-content">
+    <h1 class="title" id="mainTitle">WHISPER</h1>
+    <p class="subtitle" id="subtitleText">Ne faites pas de bruit.</p>
+    <a href="#downloads" class="cta-btn">Télécharger</a>
+  </div>
+  <div class="scroll-hint">▼ défiler ▼</div>
+</section>
+
+<!-- ===== DOWNLOADS ===== -->
+<section id="downloads">
+  <h2 class="section-title">Téléchargements</h2>
+  <div class="downloads-grid">
+    <a class="download-card" href="https://mega.nz/file/OKBREDaC#neYjTtsHR72aXY7vwSOg53jnRzOr3aadAXfB0bQ_MR4" target="_blank" rel="noopener noreferrer">
+      <span class="download-icon">🖥️</span>
+      <h3>PC (Windows)</h3>
+      <p>Archive via Mega</p>
+      <span class="download-badge">TÉLÉCHARGER</span>
+    </a>
+    <a class="download-card" href="https://mega.nz/file/HHBGVDgb#QtJ_yUUtpEgN8-aALYY5SwMKa6Yk4OK3FUCF7zwAt0g" target="_blank" rel="noopener noreferrer">
+      <span class="download-icon">📱</span>
+      <h3>Android</h3>
+      <p>APK via Mega</p>
+      <span class="download-badge">TÉLÉCHARGER</span>
+    </a>
+  </div>
+  <p class="version-note">Version 1.0 — Chapitre 1</p>
+  <p class="download-warning">Les deux fichiers sont hébergés sur Mega.nz. Le lien s'ouvre dans un nouvel onglet — il entendra que vous l'avez ouvert.</p>
+</section>
+
+<!-- ===== MULTIPLAYER ===== -->
+<section id="multiplayer">
+  <h2 class="section-title">Multijoueur</h2>
+  <div class="mp-box">
+    <p>Pour jouer à plusieurs, connectez tous les joueurs au même réseau WiFi, puis entrez l'adresse IP du serveur ci-dessous dans le jeu :</p>
+    <div class="ip-display">
+      <span class="ip-value" id="ipValue">192.168.1.50</span>
+      <button class="copy-btn" id="copyBtn">Copier</button>
+    </div>
+    <p class="mp-cmd">L'hôte doit lancer le serveur avec <code>node server.js</code> sur son PC.</p>
+  </div>
+</section>
+
+<!-- ===== FEATURES ===== -->
+<section id="features">
+  <h2 class="section-title">Fonctionnalités</h2>
+  <div class="features-grid">
+    <div class="feature-card">
+      <span class="feature-icon">👁️</span>
+      <h3>Le Monstre Aveugle</h3>
+      <p>Il ne voit pas... mais il entend tout. Un seul bruit et c'est la fin.</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">📖</span>
+      <h3>Mode Histoire</h3>
+      <p>Plongez dans un scénario oppressant, chapitre après chapitre.</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">🌐</span>
+      <h3>Multijoueur</h3>
+      <p>Jouez en coop en réseau local avec vos amis.</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">💀</span>
+      <h3>Triches</h3>
+      <p>Des codes cachés pour les plus téméraires... à vos risques et périls.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===== CREDITS ===== -->
+<section class="credits">
+  <div class="small-title">WHISPER</div>
+  Développé par Axi (Julien) — 2026
+  <div class="signature">il regarde depuis le début</div>
+</section>
+
+<div class="egg-dot" id="eggDot" title=""></div>
+
+<!-- ===== SCREAMER ===== -->
+<div class="screamer" id="screamer">
+  <svg class="screamer-face" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <radialGradient id="faceGrad" cx="50%" cy="40%" r="70%">
+        <stop offset="0%" stop-color="#2a0000"/>
+        <stop offset="100%" stop-color="#000000"/>
+      </radialGradient>
+    </defs>
+    <ellipse cx="100" cy="100" rx="90" ry="95" fill="url(#faceGrad)" stroke="#ff2a6a" stroke-width="2"/>
+    <ellipse cx="65" cy="85" rx="16" ry="22" fill="#ff2a6a"/>
+    <ellipse cx="135" cy="85" rx="16" ry="22" fill="#ff2a6a"/>
+    <ellipse cx="65" cy="85" rx="6" ry="10" fill="#000"/>
+    <ellipse cx="135" cy="85" rx="6" ry="10" fill="#000"/>
+    <path d="M55 150 Q100 185 145 150 Q100 170 55 150 Z" fill="#000"/>
+    <g stroke="#ddd" stroke-width="2">
+      <line x1="60" y1="150" x2="62" y2="162"/>
+      <line x1="75" y1="156" x2="76" y2="170"/>
+      <line x1="90" y1="160" x2="90" y2="174"/>
+      <line x1="110" y1="160" x2="110" y2="174"/>
+      <line x1="125" y1="156" x2="124" y2="170"/>
+      <line x1="140" y1="150" x2="138" y2="162"/>
+    </g>
+  </svg>
+  <div class="screamer-text" id="screamerText">IL T'A ENTENDU.</div>
+</div>
+
+<script>
+(function(){
+  const mainContent = document.body;
+
+  // ---- custom cursor ----
+  const cursorDot = document.getElementById('cursorDot');
+  const cursorRing = document.getElementById('cursorRing');
+  let mouseX = -100, mouseY = -100, ringX = -100, ringY = -100;
+  window.addEventListener('mousemove', (e) => {
+    mouseX = e.clientX; mouseY = e.clientY;
+    cursorDot.style.left = mouseX + 'px';
+    cursorDot.style.top = mouseY + 'px';
+  });
+  (function animateRing(){
+    ringX += (mouseX - ringX) * 0.18;
+    ringY += (mouseY - ringY) * 0.18;
+    cursorRing.style.left = ringX + 'px';
+    cursorRing.style.top = ringY + 'px';
+    requestAnimationFrame(animateRing);
+  })();
+  document.querySelectorAll('a,button').forEach(el=>{
+    el.addEventListener('mouseenter', ()=>{
+      cursorDot.style.width='16px'; cursorDot.style.height='16px';
+      cursorRing.style.borderColor='var(--cyan)';
+    });
+    el.addEventListener('mouseleave', ()=>{
+      cursorDot.style.width='10px'; cursorDot.style.height='10px';
+      cursorRing.style.borderColor='rgba(255,42,106,0.5)';
+    });
+  });
+
+  // ---- title glitch on load ----
+  const title = document.getElementById('mainTitle');
+  window.addEventListener('load', () => {
+    title.classList.add('glitch');
+    setTimeout(() => title.classList.remove('glitch'), 400);
+  });
+  setInterval(() => {
+    title.classList.add('glitch');
+    setTimeout(() => title.classList.remove('glitch'), 250);
+  }, 7000);
+
+  // ---- subtitle text corruption ----
+  const subtitleEl = document.getElementById('subtitleText');
+  const normalSubtitle = "Ne faites pas de bruit.";
+  const corruptedSubtitles = ["Ne f4ites p4s de bruit.", "Il vous écoute.", "N̷e̷ ̷f̷a̷i̷t̷e̷s̷ ̷p̷a̷s̷ ̷d̷e̷ ̷b̷r̷u̷i̷t̷.", "Trop tard."];
+  setInterval(() => {
+    if(Math.random() < 0.35){
+      const pick = corruptedSubtitles[Math.floor(Math.random()*corruptedSubtitles.length)];
+      subtitleEl.textContent = pick;
+      subtitleEl.classList.add('danger');
+      setTimeout(() => {
+        subtitleEl.textContent = normalSubtitle;
+        subtitleEl.classList.remove('danger');
+      }, 600);
+    }
+  }, 9000);
+
+  // ---- drifting red eyes in the dark ----
+  const eyesLayer = document.getElementById('eyesLayer');
+  function spawnEyes(){
+    const pair = document.createElement('div');
+    pair.className = 'eye-pair';
+    pair.innerHTML = '<span></span><span></span>';
+    const x = Math.random() * 90 + 2;
+    const y = Math.random() * 90 + 2;
+    pair.style.left = x + 'vw';
+    pair.style.top = y + 'vh';
+    const scale = 0.6 + Math.random()*1.2;
+    pair.style.transform = `scale(${scale})`;
+    eyesLayer.appendChild(pair);
+    requestAnimationFrame(() => pair.classList.add('show'));
+    setTimeout(() => pair.remove(), 4800);
+  }
+  setInterval(() => {
+    if(Math.random() < 0.55) spawnEyes();
+  }, 5000);
+
+  // ---- whisper text drifting ----
+  const whisperWords = ["chut...", "il arrive", "ne bouge pas", "écoute", "derrière toi", "silence", "il t'entend"];
+  function spawnWhisper(){
+    const w = document.createElement('div');
+    w.className = 'whisper-text';
+    w.textContent = whisperWords[Math.floor(Math.random()*whisperWords.length)];
+    w.style.fontSize = (1 + Math.random()*1.5) + 'rem';
+    w.style.left = (Math.random()*70 + 5) + 'vw';
+    w.style.top = (Math.random()*80 + 5) + 'vh';
+    document.body.appendChild(w);
+    requestAnimationFrame(()=> w.classList.add('show'));
+    setTimeout(()=> w.remove(), 5200);
+  }
+  setInterval(() => {
+    if(Math.random() < 0.4) spawnWhisper();
+  }, 8000);
+
+  // ---- random static burst + screen shake ----
+  const staticBurst = document.getElementById('staticBurst');
+  function triggerStatic(){
+    staticBurst.classList.remove('active');
+    void staticBurst.offsetWidth;
+    staticBurst.classList.add('active');
+    document.body.classList.remove('screen-shake');
+    void document.body.offsetWidth;
+    document.body.classList.add('screen-shake');
+  }
+  setInterval(() => {
+    if(Math.random() < 0.3) triggerStatic();
+  }, 11000);
+
+  // ---- presence indicator ----
+  const presence = document.getElementById('presence');
+  setInterval(() => {
+    if(Math.random() < 0.25){
+      presence.classList.remove('show');
+      void presence.offsetWidth;
+      presence.classList.add('show');
+    }
+  }, 14000);
+
+  // ---- tab-blur scare: title bar whispers back ----
+  const realTitle = document.title;
+  let blurTimeout = null;
+  window.addEventListener('blur', () => {
+    blurTimeout = setTimeout(() => {
+      document.title = '◼ IL T\'A VU PARTIR ◼';
+    }, 1200);
+  });
+  window.addEventListener('focus', () => {
+    clearTimeout(blurTimeout);
+    document.title = realTitle;
+  });
+
+  // ---- audio context (ambient hum + whispers + screamer sound) ----
+  let audioCtx = null;
+  let ambientNodes = null;
+  let soundOn = false;
+  const soundBtn = document.getElementById('soundBtn');
+
+  function ensureCtx(){
+    if(!audioCtx){
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    return audioCtx;
+  }
+
+  function startAmbient(){
+    const ctx = ensureCtx();
+    const osc = ctx.createOscillator();
+    const osc2 = ctx.createOscillator();
+    const gain = ctx.createGain();
+    const lfo = ctx.createOscillator();
+    const lfoGain = ctx.createGain();
+
+    osc.type = 'sine';
+    osc.frequency.value = 55;
+    osc2.type = 'sine';
+    osc2.frequency.value = 58;
+
+    gain.gain.value = 0.025;
+
+    lfo.frequency.value = 0.15;
+    lfoGain.gain.value = 0.01;
+    lfo.connect(lfoGain);
+    lfoGain.connect(gain.gain);
+
+    osc.connect(gain);
+    osc2.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start();
+    osc2.start();
+    lfo.start();
+
+    ambientNodes = {osc, osc2, gain, lfo};
+
+    // occasional faint whisper burst
+    ambientNodes.whisperInterval = setInterval(() => {
+      if(!soundOn) return;
+      const now = ctx.currentTime;
+      const wOsc = ctx.createOscillator();
+      const wGain = ctx.createGain();
+      wOsc.type = 'triangle';
+      wOsc.frequency.setValueAtTime(300 + Math.random()*200, now);
+      wOsc.frequency.linearRampToValueAtTime(150 + Math.random()*100, now + 0.8);
+      wGain.gain.setValueAtTime(0.0001, now);
+      wGain.gain.exponentialRampToValueAtTime(0.025, now + 0.1);
+      wGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.9);
+      wOsc.connect(wGain);
+      wGain.connect(ctx.destination);
+      wOsc.start(now);
+      wOsc.stop(now + 1);
+    }, 6000 + Math.random()*4000);
+  }
+
+  function stopAmbient(){
+    if(ambientNodes){
+      try{
+        ambientNodes.osc.stop();
+        ambientNodes.osc2.stop();
+        ambientNodes.lfo.stop();
+        clearInterval(ambientNodes.whisperInterval);
+      }catch(e){}
+      ambientNodes = null;
+    }
+  }
+
+  soundBtn.addEventListener('click', () => {
+    soundOn = !soundOn;
+    if(soundOn){
+      ensureCtx();
+      if(audioCtx.state === 'suspended') audioCtx.resume();
+      startAmbient();
+      soundBtn.textContent = '🔊 Son activé';
+    } else {
+      stopAmbient();
+      soundBtn.textContent = '🔇 Activer le son';
+    }
+  });
+
+  // ---- copy IP ----
+  const copyBtn = document.getElementById('copyBtn');
+  const ipValue = document.getElementById('ipValue');
+  copyBtn.addEventListener('click', () => {
+    const text = ipValue.textContent.trim();
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(()=>{
+        const original = copyBtn.textContent;
+        copyBtn.textContent = 'Copié !';
+        setTimeout(()=>{ copyBtn.textContent = original; }, 1500);
+      }).catch(()=>{ fallbackCopy(text); });
+    } else {
+      fallbackCopy(text);
+    }
+  });
+  function fallbackCopy(text){
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    try{ document.execCommand('copy'); }catch(e){}
+    document.body.removeChild(ta);
+    const original = copyBtn.textContent;
+    copyBtn.textContent = 'Copié !';
+    setTimeout(()=>{ copyBtn.textContent = original; }, 1500);
+  }
+
+  // ---- screamer sound ----
+  function playScream(){
+    const ctx = ensureCtx();
+    if(ctx.state === 'suspended') ctx.resume();
+    const now = ctx.currentTime;
+
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(1800, now);
+    osc.frequency.exponentialRampToValueAtTime(220, now + 1.8);
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(0.5, now + 0.05);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 2);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + 2);
+
+    const noiseBuffer = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
+    const data = noiseBuffer.getChannelData(0);
+    for(let i=0;i<data.length;i++){ data[i] = (Math.random()*2-1) * 0.3; }
+    const noise = ctx.createBufferSource();
+    noise.buffer = noiseBuffer;
+    const noiseGain = ctx.createGain();
+    noiseGain.gain.setValueAtTime(0.3, now);
+    noiseGain.gain.exponentialRampToValueAtTime(0.0001, now + 2);
+    noise.connect(noiseGain);
+    noiseGain.connect(ctx.destination);
+    noise.start(now);
+    noise.stop(now + 2);
+  }
+
+  function triggerScreamer(text){
+    const screamer = document.getElementById('screamer');
+    const screamerText = document.getElementById('screamerText');
+    if(text) screamerText.textContent = text;
+    screamer.classList.add('active');
+    playScream();
+    if(navigator.vibrate){ navigator.vibrate([100,50,100,50,200]); }
+    setTimeout(() => {
+      screamer.classList.remove('active');
+    }, 2000);
+  }
+
+  // ---- easter egg: hidden dot, 3 clicks ----
+  const eggDot = document.getElementById('eggDot');
+  let clickCount = 0;
+  let clickTimer = null;
+  eggDot.addEventListener('click', () => {
+    clickCount++;
+    clearTimeout(clickTimer);
+    clickTimer = setTimeout(() => { clickCount = 0; }, 1200);
+    if(clickCount >= 3){
+      clickCount = 0;
+      triggerScreamer('IL T\'A ENTENDU.');
+    }
+  });
+
+  // ---- easter egg 2: Konami code ----
+  const konami = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];
+  let konamiProgress = 0;
+  window.addEventListener('keydown', (e) => {
+    const key = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+    if(key === konami[konamiProgress]){
+      konamiProgress++;
+      if(konamiProgress === konami.length){
+        konamiProgress = 0;
+        triggerScreamer('TU AURAIS DÛ FUIR.');
+      }
+    } else {
+      konamiProgress = (key === konami[0]) ? 1 : 0;
+    }
+  });
+})();
+</script>
+
+</body>
+</html>
